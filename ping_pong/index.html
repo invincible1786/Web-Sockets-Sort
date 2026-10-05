@@ -7,14 +7,22 @@
 </head>
 <body>
     <h1> PING PONG SORT </h1>
+    <p id="tt">00</p>
     <button id="ping">PING</button>  
     <script src="/socket.io/socket.io.js"></script>  
     <script>
         const socket = io();
         const btn = document.getElementById('ping');
+        const para = document.getElementById('tt');
 
         btn.addEventListener('click', (e)=>{
-            socket.emit('pingg');
+            const start_time = Date.now();
+            socket.emit('pingg', start_time);
+        })
+
+        socket.on('pongg', (start_time)=>{
+            para.innerText = Date.now() - start_time;
+            console.log("PONG");
         })
     </script>
 </body>

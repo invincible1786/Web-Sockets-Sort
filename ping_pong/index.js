@@ -17,11 +17,15 @@ app.get('/', (req, res) => {
 
 io.on('connection', (socket) => {
     console.log("user detected");
-    socket.on('pingg', ()=>{
-        console.log('PONG');
+    // console.log("user detected", socket.id); = better practice !!
+    socket.on('pingg', (start_time)=>{
+        socket.emit('pongg', start_time)
     });
-});   
 
+  socket.on('disconnect', ()=>{
+    console.log("buh bye my pretty");
+  });
+});  
 
 server.listen(port, () => {
   console.log(`server on port ${port}`)
