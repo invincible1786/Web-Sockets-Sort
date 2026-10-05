@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>Socket.IO chat</title>
+  </head>
+  <body>
+    
+    <h1>Lets fcuking chat mother fuckerrsss !!</h1>
+    <form id="form">
+      <input id="input" autocomplete="off" />
+      <button id="other">Other</button>
+      <button id="all">All</button>
+    </form>
+
+    <ul id="messages"></ul>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+
+    const socket = io();
+
+    const other = document.getElementById('other');
+    const all = document.getElementById('all');
+    const messages = document.getElementById('messages');
+    const input = document.getElementById('input');
+
+    other.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (input.value) {
+      socket.emit("oth", input.value);
+      input.value = '';
+    }
+  });
+
+  all.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (input.value) {
+      socket.emit("al", input.value);
+      input.value = '';
+    }
+  });
+
+    socket.on('msgg', (arg) => {
+    const item = document.createElement('li');
+    item.textContent = arg;
+    messages.appendChild(item);
+    window.scrollTo(0, document.body.scrollHeight);
+  });
+
+    
+
+</script>
+  </body>
+</html>
