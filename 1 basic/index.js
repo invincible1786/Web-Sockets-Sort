@@ -66,3 +66,10 @@ io.on('connection', (socket) => {
 // });
 
 // https://socket.io/docs/v4/tutorial/api-overview - refer to this for using callback for sending requests and even for making rooms and all
+
+// disconnections - the client might get temporarily disconnected - loss of messages in chat
+// for handling this - turn on the ConnectionStateRecovery() - keeps track of the temp events
+
+// Server delivery - 
+// keep track in server
+// keep track in client

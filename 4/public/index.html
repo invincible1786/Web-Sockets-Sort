@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Cursors Sync</title>
+  
+</head>
+<body>
+
+  <div class="info">
+    <h2>Live Cursors</h2>
+    <p>Open this page in multiple tabs or windows to test!</p>
+  </div>
+
+  <!-- Socket.io client library served directly by the socket.io server -->
+  <script src="/socket.io/socket.io.js"></script>
+  
+  <script>
+    const socket = io();
+
+    // Map to keep track of cursor DOM elements: { socketId: HTMLElement }
+    const cursors = {};
+
+    // Helper: Create a cursor dot DOM element
+    function createCursorElement(id, color) {
+      const dot = document.createElement('div');
+      dot.className = 'cursor';
+      dot.style.backgroundColor = color;
+
+      const label = document.createElement('span');
+      label.className = 'cursor-label';
+      label.innerText = id.substring(0, 5); // Short socket ID preview
+      dot.appendChild(label);
+
+      document.body.appendChild(dot);
+      return dot;
+    }
+
+    // Helper: Update element position on screen
+    function updateCursorPosition(id, x, y) {
+      if (cursors[id]) {
+        cursors[id].style.left = `${x}px`;
+        cursors[id].style.top = `${y}px`;
+      }
+    }
+
+    // 1. Initial sync of all existing cursors when connecting
+    socket.on('init-cursors', (users) => {
+      Object.keys(users).forEach((id) => {
+        if (id !== socket.id && !cursors[id]) {
+          cursors[id] = createCursorElement(id, users[id].color);
+          updateCursorPosition(id, users[id].x, users[id].y);
+        }
+      });
+    });
+
+    // 2. Handle a new user joining
+    socket.on('user-joined', ({ id, color }) => {
+      if (id !== socket.id && !cursors[id]) {
+        cursors[id] = createCursorElement(id, color);
+      }
+    });
+
+    // 3. Handle incoming position updates from other users
+    socket.on('cursor-update', ({ id, x, y }) => {
+      updateCursorPosition(id, x, y);
+    });
+
+    // 4. Handle disconnection - remove the user's cursor dot
+    socket.on('user-disconnected', (id) => {
+      if (cursors[id]) {
+        cursors[id].remove();
+        delete cursors[id];
+      }
+    });
+
+    // --- THROTTLING LOGIC ---
+    // Throttle helper to limit high-frequency mousemove emissions (~30ms / 33fps)
+    function throttle(func, limit) {
+      let lastFunc;
+      let lastRan;
+      return function (...args) {
+        const context = this;
+        if (!lastRan) {
+          func.apply(context, args);
+          lastRan = Date.now();
+        } else {
+          clearTimeout(lastFunc);
+          lastFunc = setTimeout(function () {
+            if (Date.now() - lastRan >= limit) {
+              func.apply(context, args);
+              lastRan = Date.now();
+            }
+          }, limit - (Date.now() - lastRan));
+        }
+      };
+    }
+
+    // Emit mousemove coordinates throttled to ~30ms
+    const handleMouseMove = throttle((e) => {
+      socket.emit('mousemove', {
+        x: e.clientX,
+        y: e.clientY
+      });
+    }, 30);
+
+    window.addEventListener('mousemove', handleMouseMove);
+  </script>
+</body>
+</html>
